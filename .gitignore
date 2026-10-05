@@ -1,0 +1,39 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Motor matemático (engine/) — artefactos de compilación
+engine/target/
+# Salida de wasm-pack. Vive bajo src/ para que Vite la empaquete y le ponga
+# hash, en vez de copiarla a public/ a mano y arriesgar caché rancia.
+src/lib/engine/pkg/
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Trash files
+trash/*
+
+# Generado por Astro en cada build/dev
+.astro/
+
+# Vercel CLI (proyecto enlazado localmente)
+.vercel

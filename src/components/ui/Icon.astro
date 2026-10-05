@@ -1,0 +1,76 @@
+---
+/*
+  Icon — bespoke, math-flavored line icons drawn for MathSlice (no generic book/cap clichés).
+  24×24, currentColor, 1.6 stroke. Section marks encode the idea, not a stock metaphor:
+    home       → an origin node radiating edges (the graph you start from)
+    discover   → an axis-compass sweeping the plane (exploration of the space)
+    learn      → a rising curve crossing a threshold (progression)
+    community  → a small graph of connected people-nodes
+    faq        → a spiral resolving to a point (an open question closing)
+    logo       → a sector "slice" cut from a gridded disc (MathSlice)
+*/
+interface Props {
+  name: "home" | "discover" | "learn" | "community" | "faq" | "logo";
+  class?: string;
+  size?: number;
+}
+const { name, class: className = "", size = 24 } = Astro.props;
+---
+
+<svg
+  width={size}
+  height={size}
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.6"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  aria-hidden="true"
+  class={className}
+>
+  {name === "home" && (
+    <>
+      <circle cx="12" cy="12" r="2.4" fill="currentColor" stroke="none" />
+      <path d="M12 9.6V4M12 14.4V20M9.6 12H4M14.4 12H20" />
+      <path d="M10.3 10.3 6.5 6.5M13.7 13.7l3.8 3.8M13.7 10.3l3.8-3.8M10.3 13.7 6.5 17.5" opacity="0.5" />
+    </>
+  )}
+  {name === "discover" && (
+    <>
+      <path d="M4 20 20 4" opacity="0.4" />
+      <path d="M12 3v18M3 12h18" opacity="0.3" />
+      <circle cx="15" cy="9" r="4.2" />
+      <path d="M18 12l3 3" />
+    </>
+  )}
+  {name === "learn" && (
+    <>
+      <path d="M3 12h18" opacity="0.4" stroke-dasharray="2 3" />
+      <path d="M3 19C7 19 8 5 12 5s5 14 9 14" />
+      <circle cx="12" cy="5" r="1.4" fill="currentColor" stroke="none" />
+    </>
+  )}
+  {name === "community" && (
+    <>
+      <circle cx="6" cy="8" r="2.2" />
+      <circle cx="18" cy="8" r="2.2" />
+      <circle cx="12" cy="17" r="2.2" />
+      <path d="M8 9l2.5 6.2M16 9l-2.5 6.2M8 8h8" opacity="0.6" />
+    </>
+  )}
+  {name === "faq" && (
+    <>
+      <path d="M15.5 8.5a3.5 3.5 0 1 0-1 5C11 15 12 17 12 18" />
+      <circle cx="12" cy="21" r="0.6" fill="currentColor" stroke="none" />
+    </>
+  )}
+  {name === "logo" && (
+    <>
+      <circle cx="12" cy="12" r="9" opacity="0.35" />
+      <path d="M12 3v9h9" opacity="0.35" />
+      <path d="M12 12 L12 3 A9 9 0 0 1 20.5 15 Z" fill="currentColor" stroke="none" opacity="0.9" />
+      <path d="M6 12h12M12 6v12" opacity="0.25" />
+    </>
+  )}
+</svg>

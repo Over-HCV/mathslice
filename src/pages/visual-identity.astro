@@ -1,0 +1,49 @@
+---
+import "../styles/global.css";
+import ThemeBoot from "@/components/ThemeBoot.astro";
+import GridPaper from "@/components/backgrounds/GridPaper.astro";
+import IdentityLab from "@/components/identity-lab/IdentityLab.tsx";
+import GlassRandomizer from "@/components/GlassRandomizer.astro";
+/*
+  /visual-identity — private identity laboratory. Not linked from anywhere, excluded from the
+  sitemap (astro.config), and noindex. It writes the identity tokens onto :root live, so the
+  whole app re-themes as you tweak; "Guardar" persists the choice as the app-wide default.
+
+  NOTE: this is soft-gated (noindex + unlinked). A hard gate (middleware/basic-auth or an env
+  flag that drops the route in prod) is a follow-up once the app has SSR/hosting.
+*/
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>Laboratorio de identidad · MathSlice</title>
+    <ThemeBoot />
+  </head>
+  <body class="min-h-dvh antialiased">
+    <GridPaper />
+    <div class="mx-auto w-full max-w-6xl px-5 py-8 sm:px-6">
+      <header class="mb-6 flex flex-wrap items-baseline justify-between gap-2">
+        <div>
+          <p class="font-mono text-xs uppercase tracking-[0.22em] text-ink-muted">
+            Laboratorio de identidad · privado
+          </p>
+          <h1 class="mt-1 text-3xl font-semibold text-ink">Sistema visual y verbal</h1>
+        </div>
+        <a href="/" class="text-sm text-ink-muted transition-colors hover:text-primary">← Volver al sitio</a>
+      </header>
+      <p class="mb-8 max-w-2xl text-ink-muted">
+        Ajusta tipografía, color, superficie y voz. Todo se aplica en vivo sobre la app entera
+        (los tokens en <code class="font-mono text-sm text-ink">:root</code>). Cuando te guste,
+        <b class="text-ink">Guardar como predeterminada</b> lo fija para todo el sitio.
+      </p>
+
+      <IdentityLab client:load />
+    </div>
+    <GlassRandomizer />
+  </body>
+</html>

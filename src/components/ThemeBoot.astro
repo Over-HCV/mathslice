@@ -1,0 +1,42 @@
+---
+/*
+  ThemeBoot — pre-paint identity bootstrap. Runs before first paint (is:inline, in <head>)
+  so there is no theme flash and any saved lab identity is applied instantly. It never
+  imports the preset tables: the saved payload already carries resolved token maps for
+  both schemes (see buildStored in src/lib/identity.ts). Keep this tiny and dependency-free.
+*/
+const STORAGE_KEY = "mathslice-identity";
+const IDENTITY_VERSION = 2;
+---
+
+<script is:inline define:vars={{ STORAGE_KEY, IDENTITY_VERSION }}>
+  (function () {
+    var root = document.documentElement;
+    var theme = "system";
+    var vars = null;
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        var data = JSON.parse(raw);
+        if (!data || data.version !== IDENTITY_VERSION) {
+          // stale schema (old token model) — discard so new defaults apply.
+          localStorage.removeItem(STORAGE_KEY);
+          throw new Error("stale identity");
+        }
+        theme = data.theme || "system";
+        var dark =
+          theme === "dark" ||
+          (theme === "system" &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches);
+        root.dataset.theme = dark ? "dark" : "light";
+        vars = dark ? data.varsDark : data.varsLight;
+        if (vars) for (var k in vars) root.style.setProperty(k, vars[k]);
+        return;
+      }
+    } catch (e) {}
+    // No saved identity: follow the OS, let tokens.css defaults render.
+    root.dataset.theme = window.matchMedia("(prefers-color-scheme: dark)").matches
+      ? "dark"
+      : "light";
+  })();
+</script>

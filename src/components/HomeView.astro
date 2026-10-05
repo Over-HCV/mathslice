@@ -1,0 +1,42 @@
+---
+import Base from "@/layouts/Base.astro";
+import Hero from "@/components/Hero.astro";
+import { t, sectionPath, DEFAULT_LOCALE, type Locale } from "@/i18n";
+
+const locale = (Astro.currentLocale ?? DEFAULT_LOCALE) as Locale;
+const s = t(locale);
+const discoverHref = sectionPath("explore", locale);
+const axiomsHref = `${locale === "es" ? "" : "/en"}/descubre/a-origins/00-axioms`;
+---
+
+<Base section="home" title={`${s.brand} — ${s.tagline}`} description={s.sections.home.blurb}>
+  <Hero title={s.sections.home.title} blurb={s.sections.home.blurb}>
+    <div class="mt-8 flex flex-wrap gap-3">
+      <a
+        href={discoverHref}
+        class="rounded-[var(--radius-sm)] bg-primary px-5 py-2.5 text-sm font-semibold text-primary-ink transition-opacity hover:opacity-90"
+      >
+        {locale === "es" ? "Explorar temas" : "Explore topics"}
+      </a>
+      <a
+        href={axiomsHref}
+        class="glass rounded-[var(--radius-sm)] px-5 py-2.5 text-sm font-semibold text-ink transition-colors hover:text-primary"
+      >
+        {locale === "es" ? "Empezar por: Axiomas" : "Start with: Axioms"}
+      </a>
+    </div>
+  </Hero>
+
+  <section class="mt-16 grid gap-4 sm:grid-cols-3">
+    {[
+      { k: "run", es: "Ejecuta", en: "Run", esd: "Código que corre en tu navegador, aislado.", end: "Code that runs in your browser, sandboxed." },
+      { k: "touch", es: "Manipula", en: "Drag", esd: "Gráficas y escenas 3D que respondes al tacto.", end: "Graphs and 3D scenes you touch." },
+      { k: "verify", es: "Comprueba", en: "Verify", esd: "Demostraciones que puedes revisar paso a paso.", end: "Proofs you can step through." },
+    ].map((c) => (
+      <div class="glass rounded-[var(--radius)] p-5">
+        <p class="font-display text-xl font-semibold text-primary">{locale === "es" ? c.es : c.en}</p>
+        <p class="mt-2 text-sm text-ink-muted">{locale === "es" ? c.esd : c.end}</p>
+      </div>
+    ))}
+  </section>
+</Base>

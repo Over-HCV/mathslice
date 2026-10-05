@@ -1,0 +1,14 @@
+---
+import EngineCategoryView from "@/components/engine-tree/EngineCategoryView.astro";
+import { readIndex } from "@/lib/engineTree.server";
+
+/* One page per category of engine/tree/. The list comes from the generated index, so a
+   category added to engine/docs/ gets its page with no route to write. */
+export function getStaticPaths() {
+  return readIndex().categories.map((category) => ({ params: { category: category.slug } }));
+}
+
+const { category } = Astro.params;
+---
+
+<EngineCategoryView slug={category} />

@@ -1,0 +1,44 @@
+---
+import Base from "@/layouts/Base.astro";
+import ExploreTabs from "@/components/learn/ExploreTabs.tsx";
+import { buildMathsTree } from "@/lib/mathsTree";
+import { getCollection } from "astro:content";
+import { t, DEFAULT_LOCALE, type Locale } from "@/i18n";
+
+const locale = (Astro.currentLocale ?? DEFAULT_LOCALE) as Locale;
+const s = t(locale);
+const radial = Astro.url.searchParams.get("nav") === "radial"; // hidden alternate navigator
+
+// A topic is clickable when it has a published page — one entry per level, so the topics are
+// the distinct paths behind those entries.
+const entries = await getCollection("topics");
+const published = new Set(entries.filter((e) => !e.data.draft).map((e) => e.data.topic));
+const tree = buildMathsTree(published, locale);
+
+const labels = {
+  temas: s.ui.tabTopics,
+  problemas: s.ui.tabProblems,
+  soon: s.ui.comingSoon,
+  soonLabel: s.ui.comingSoon,
+  hint:
+    locale === "es"
+      ? "Clic para abrir cada nivel · desliza horizontal para volver"
+      : "Click to open each level · scroll horizontally to go back",
+  problemsTitle: locale === "es" ? "Problemas diarios para resolver" : "Daily problems to solve",
+  problemsBody:
+    locale === "es"
+      ? "Aprende resolviendo: un problema nuevo cada día, con pistas y verificación. El empirismo aplicado a las matemáticas."
+      : "Learn by solving: a fresh problem each day, with hints and verification. Empiricism applied to mathematics.",
+};
+---
+
+<Base section="explore" title={`${s.nav.explore} · ${s.brand}`} description={s.sections.explore.blurb}>
+  <div class="mb-4">
+    <p class="font-mono text-xs uppercase tracking-[0.22em] text-ink-muted">{s.nav.explore}</p>
+    <h1 class="mt-1 text-3xl font-semibold leading-tight text-ink sm:text-4xl">
+      {s.sections.explore.title}
+    </h1>
+  </div>
+
+  <ExploreTabs client:only="react" tree={tree} labels={labels} radial={radial} />
+</Base>

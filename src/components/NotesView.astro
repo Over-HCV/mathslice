@@ -1,0 +1,50 @@
+---
+import Base from "@/layouts/Base.astro";
+import NotesApp from "@/components/notes/NotesApp.tsx";
+import { t, DEFAULT_LOCALE, type Locale } from "@/i18n";
+
+const locale = (Astro.currentLocale ?? DEFAULT_LOCALE) as Locale;
+const s = t(locale);
+const strings = {
+  atomKinds: s.topic.atomKinds,
+  newDoc: s.ui.newDoc,
+  noDocs: s.ui.noDocs,
+  untitled: locale === "es" ? "Sin título" : "Untitled",
+  back: locale === "es" ? "Documentos" : "Documents",
+  hint:
+    locale === "es"
+      ? "Enter: nuevo bloque · «/»: insertar · Esc: seleccionar · Alt+↑/↓: mover"
+      : 'Enter: new block · "/": insert · Esc: select · Alt+↑/↓: move',
+  // Sólo se ve dentro de un bloque de ecuación, donde «/» ya es la fracción y el
+  // menú de comandos lo abre «\».
+  math: {
+    hint:
+      locale === "es"
+        ? "«\\»: comandos · Enter: otra línea · Cmd+Enter: resolver"
+        : '"\\": commands · Enter: another line · Cmd+Enter: solve',
+    raw: locale === "es" ? "Editar el LaTeX a mano" : "Edit the LaTeX by hand",
+    // Lo que la paleta muestra apagado: existe en matemáticas, todavía no en el
+    // motor. Ver `src/lib/engine/surface.ts`.
+    unsupported: locale === "es" ? "el motor aún no lo lee" : "the engine cannot read it yet",
+    categories: {
+      functions: locale === "es" ? "Funciones" : "Functions",
+      operations: locale === "es" ? "Operaciones" : "Operations",
+      structure: locale === "es" ? "Estructura" : "Structure",
+      greek: locale === "es" ? "Griegas" : "Greek",
+      analysis: locale === "es" ? "Análisis" : "Analysis",
+    },
+  },
+};
+---
+
+<Base section="notes" title={`${s.nav.notes} · ${s.brand}`} description={s.sections.notes.blurb}>
+  <div class="mb-6">
+    <p class="font-mono text-xs uppercase tracking-[0.22em] text-ink-muted">{s.nav.notes}</p>
+    <h1 class="mt-1 text-3xl font-semibold leading-tight text-ink sm:text-4xl">
+      {s.sections.notes.title}
+    </h1>
+    <p class="mt-2 max-w-xl text-ink-muted">{s.sections.notes.blurb}</p>
+  </div>
+
+  <NotesApp client:only="react" strings={strings} />
+</Base>

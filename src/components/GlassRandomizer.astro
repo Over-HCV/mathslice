@@ -1,0 +1,42 @@
+---
+/*
+  GlassRandomizer — gives each .glass element a random highlight rotation (--glass-rot) so the
+  border light catches different edges on every panel. The catch: mutating the DOM of a
+  server-rendered React island BEFORE it hydrates causes a hydration mismatch. So the initial scan
+  SKIPS any .glass inside an <astro-island> (those are hydrating React roots); a MutationObserver
+  then randomizes glass added later (client:only island content, editor blocks) — that happens
+  post-hydration and is safe.
+*/
+---
+
+<script is:inline>
+  (function () {
+    function rnd(el) {
+      if (el.dataset.glassInit) return;
+      el.dataset.glassInit = "1";
+      el.style.setProperty("--glass-rot", Math.floor(Math.random() * 360) + "deg");
+    }
+    function collect(root) {
+      var els = [];
+      if (root.classList && root.classList.contains("glass")) els.push(root);
+      if (root.querySelectorAll) root.querySelectorAll(".glass").forEach(function (e) { els.push(e); });
+      return els;
+    }
+    var inIsland = function (el) { return !!(el.closest && el.closest("astro-island")); };
+
+    function start() {
+      // Initial (SSR) pass: skip island glass to avoid touching React's hydrating DOM.
+      collect(document.body).forEach(function (e) { if (!inIsland(e)) rnd(e); });
+      // Later additions are post-hydration → safe to randomize anywhere.
+      new MutationObserver(function (muts) {
+        for (var i = 0; i < muts.length; i++)
+          for (var j = 0; j < muts[i].addedNodes.length; j++) {
+            var n = muts[i].addedNodes[j];
+            if (n.nodeType === 1) collect(n).forEach(rnd);
+          }
+      }).observe(document.body, { childList: true, subtree: true });
+    }
+    if (document.readyState === "complete") requestAnimationFrame(start);
+    else window.addEventListener("load", function () { requestAnimationFrame(start); });
+  })();
+</script>

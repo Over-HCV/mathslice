@@ -1,0 +1,8 @@
+---
+import TopicView from "@/components/topic/TopicView.astro";
+import { topicPaths } from "@/lib/topicPages";
+
+export const getStaticPaths = () => topicPaths("en");
+---
+
+<TopicView route={Astro.props.route} />

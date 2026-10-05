@@ -1,0 +1,19 @@
+---
+/*
+  Glass — floating-chrome surface primitive. Use for nav, sheets, command palette, elevated
+  cards, toasts. Do NOT use for long-form reading surfaces (use bg-surface) so math stays
+  legible. Driven entirely by the --glass-* tokens the lab controls.
+*/
+import { cn } from "@/lib/utils";
+
+interface Props {
+  class?: string;
+  as?: string;
+}
+const { class: className, as = "div" } = Astro.props;
+const Tag = as as any;
+---
+
+<Tag class={cn("glass rounded-[var(--radius)]", className)}>
+  <slot />
+</Tag>

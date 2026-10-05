@@ -1,0 +1,281 @@
+@import "tailwindcss";
+
+/* Force-scan all source for utility classes, independent of the module graph
+   (client:only islands are otherwise missed by SSR-graph-based detection). */
+@source "../**/*.{astro,html,js,jsx,ts,tsx,mdx}";
+
+/* Self-hosted variable fonts (no external requests). All finalists across the 3
+   typography presets are loaded so the lab can switch between them live. */
+@import "@fontsource-variable/fraunces";
+@import "@fontsource-variable/instrument-sans";
+@import "@fontsource-variable/hanken-grotesk";
+@import "@fontsource-variable/jetbrains-mono";
+
+@import "./tokens.css";
+
+/* Dark variant driven by the [data-theme] attribute the ThemeBoot script stamps. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* Map Tailwind utilities onto the runtime tokens. `inline` makes utilities reference
+   the CSS var directly, so the lab's live overrides of --c-* / --f-* propagate. */
+@theme inline {
+  --color-bg: var(--c-bg);
+  --color-surface: var(--c-surface);
+  --color-ink: var(--c-ink);
+  --color-ink-muted: var(--c-ink-muted);
+  --color-primary: var(--c-primary);
+  --color-primary-ink: var(--c-primary-ink);
+  --color-accent: var(--c-accent);
+  --color-border: var(--c-border);
+  --color-ring: var(--c-ring);
+
+  --font-display: var(--f-display);
+  --font-body: var(--f-body);
+  --font-mono: var(--f-mono);
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) * 0.7);
+  --radius-sm: calc(var(--radius) * 0.45);
+}
+
+@layer base {
+  * {
+    border-color: var(--c-border);
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+    /* Always, not only while a peek is open: the gutter has to be reserved on short pages too, or
+       locking the scroll widens the viewport and the whole layout jumps sideways as a panel opens. */
+    scrollbar-gutter: stable;
+  }
+  /* The peek's scroll lock. An attribute rather than a counter or saved inline styles, so nesting
+     four panels and closing them in any order can never leave the page stuck. */
+  html[data-peek-open],
+  html[data-peek-open] body {
+    overflow: hidden;
+  }
+  body {
+    background-color: var(--c-bg);
+    color: var(--c-ink);
+    font-family: var(--f-body);
+    font-synthesis-weight: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, h4 {
+    font-family: var(--f-display);
+    color: var(--c-ink);
+    text-wrap: balance;
+  }
+  :focus-visible {
+    outline: 2px solid var(--c-ring);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  /* Glass = floating chrome only (nav, sheets, command palette, elevated cards).
+     Long-form reading surfaces use bg-surface, NOT this, so math stays legible. */
+  .glass {
+    position: relative;
+    isolation: isolate;
+    /* Luminous white frost (both themes) — the moving background behind is what it refracts. */
+    background-color: color-mix(
+      in oklch,
+      var(--glass-base),
+      transparent calc((1 - var(--glass-opacity)) * 100%)
+    );
+    backdrop-filter: blur(var(--glass-blur)) saturate(1.6);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.6);
+    box-shadow:
+      0 10px 40px oklch(0 0 0 / 0.18),
+      inset 0 1px 0 oklch(1 0 0 / 0.14);
+  }
+  /* Highlight border: light catches the edge at a few points and is invisible between them
+     (a conic sweep), like a real glass rim — not a uniform outline. */
+  .glass::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    border-radius: inherit;
+    padding: 1px;
+    pointer-events: none;
+    background: conic-gradient(
+      from var(--glass-rot, 205deg),
+      var(--glass-highlight) 0deg,
+      transparent 35deg,
+      color-mix(in oklch, var(--glass-highlight), transparent 45%) 88deg,
+      transparent 140deg,
+      var(--glass-highlight) 205deg,
+      transparent 250deg,
+      transparent 320deg,
+      var(--glass-highlight) 360deg
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    mask-composite: exclude;
+  }
+  /* Frosted-glass grain film — the ingredient that makes it read as real frosted glass. */
+  .glass::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: var(--glass-grain);
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  /* Keep real content above the frost pseudo-layers. */
+  .glass > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Reading typography for MDX topic pages (no typography plugin; token-driven). */
+  .reading {
+    color: var(--c-ink);
+    font-size: 1.075rem;
+    line-height: 1.75;
+  }
+  .reading > * + * {
+    margin-top: 1.15rem;
+  }
+  .reading h2 {
+    font-size: 1.9rem;
+    line-height: 1.15;
+    margin-top: 2.4rem;
+  }
+  .reading h3 {
+    font-size: 1.4rem;
+    margin-top: 1.8rem;
+  }
+  .reading a {
+    color: var(--c-primary);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .reading strong {
+    color: var(--c-ink);
+    font-weight: 650;
+  }
+  .reading ul,
+  .reading ol {
+    padding-left: 1.3rem;
+  }
+  .reading li + li {
+    margin-top: 0.35rem;
+  }
+  .reading ul {
+    list-style: disc;
+  }
+  .reading ol {
+    list-style: decimal;
+  }
+  .reading blockquote {
+    border-left: 3px solid var(--c-accent);
+    padding-left: 1rem;
+    color: var(--c-ink-muted);
+    font-style: italic;
+  }
+  .reading code:not(pre code) {
+    font-family: var(--f-mono);
+    font-size: 0.9em;
+    background: color-mix(in oklch, var(--c-primary), transparent 90%);
+    padding: 0.1em 0.35em;
+    border-radius: 4px;
+  }
+
+  /* Static color aura the glass refracts — replaces the old per-frame canvas glows (zero cost). */
+  .aura {
+    position: fixed;
+    inset: 0;
+    z-index: -30;
+    pointer-events: none;
+    background:
+      radial-gradient(
+        55% 45% at 18% 22%,
+        color-mix(in oklch, var(--c-primary), transparent 86%),
+        transparent 72%
+      ),
+      radial-gradient(
+        50% 45% at 82% 74%,
+        color-mix(in oklch, var(--c-accent), transparent 88%),
+        transparent 72%
+      );
+  }
+
+  .hide-scrollbar {
+    scrollbar-width: none;
+  }
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* MathLive's <math-field>, dressed with our tokens.
+     Styled from here and not with utility classes because the element is a custom
+     element: @source scans src/ and cannot reach its internals, and Tailwind
+     utilities do not cross a shadow boundary either. What DOES cross are the CSS
+     custom properties it documents, and the host, which is a normal element. */
+  math-field {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: var(--c-ink);
+    font-size: 1.05rem;
+    /* Its internals inherit these, which is how the caret and the selection end up
+       the same colour as everywhere else in the app. */
+    --caret-color: var(--c-primary);
+    --selection-background-color: color-mix(in oklch, var(--c-primary), transparent 78%);
+    --selection-color: var(--c-ink);
+    --contains-highlight-background-color: color-mix(in oklch, var(--c-accent), transparent 86%);
+    /* An empty hole has to be visible without shouting: it is where you type next. */
+    --placeholder-color: var(--c-ink-muted);
+    --placeholder-opacity: 0.5;
+    --smart-fence-color: var(--c-ink-muted);
+  }
+  /* The block already shows focus (its own ring, and the caret). A second outline
+     around the field would draw a box inside a box. */
+  math-field:focus,
+  math-field:focus-visible {
+    outline: none;
+  }
+  /* Fuera los dos botones que MathLive pone en cada campo. Su teclado en pantalla
+     ofrece √, π e ∫ —que este motor no lee— y está en `manual` por eso; y el menú
+     no hace nada porque `menuItems` está vacío. Con una fila por línea, además,
+     eran dos botones repetidos por línea. `::part` es la única vía: viven en su
+     shadow root, donde las utilidades de Tailwind no entran. */
+  math-field::part(virtual-keyboard-toggle),
+  math-field::part(menu-toggle) {
+    display: none;
+  }
+
+  /* Faint grid-paper motif — sits behind content on every page. */
+  .grid-paper {
+    background-image:
+      linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+    background-size: var(--grid-size) var(--grid-size);
+  }
+}
+
+/* Global reduced-motion kill switch. Physics backgrounds also check this in JS. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

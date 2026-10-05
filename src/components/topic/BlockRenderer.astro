@@ -1,0 +1,117 @@
+---
+/*
+  BlockRenderer — the published page's host of src/lib/notes/render.ts.
+
+  Its twin is src/components/notes/render/BlockView.tsx. Two hosts, ONE table: what to draw is
+  decided by `renderKindOf` and never here. What IS decided here, and only here, is what gets
+  JavaScript. React cannot make that choice per block; Astro can, so prose, headings, columns,
+  atoms, refs and Lean proofs cost zero bytes and only the things that genuinely run in the
+  browser carry a `client:` directive.
+
+  The markup itself is shared: every static branch below renders a piece from
+  notes/render/pieces.tsx, the same one the editor draws. If a card looks different on the site
+  than in the editor, the bug is not in this file.
+
+  It recurses into itself for containers, which is the point — an artifact nested inside an atom
+  inside a column still hydrates, because the decision is taken again at every level.
+*/
+import CodeRunner from "@/components/artifacts/CodeRunner";
+import GraphBlock from "@/components/artifacts/GraphBlock";
+import MathRunner from "@/components/artifacts/MathRunner";
+import NodeDiagram from "@/components/artifacts/NodeDiagram";
+import {
+  ArtifactError,
+  AtomShell,
+  Heading,
+  LeanBlock,
+  Prose,
+  RefCard,
+} from "@/components/notes/render/pieces";
+import { renderKindOf } from "@/lib/notes/render";
+import { resolveRefIn, type LinkTable } from "@/lib/notes/refs";
+import type { AtomKind, Block } from "@/lib/notes/model";
+import Self from "./BlockRenderer.astro";
+
+interface Props {
+  block: Block;
+  /** Localised names for the atom kinds — src/i18n.ts `topic.atomKinds`. */
+  atomKinds: Record<AtomKind, string>;
+  /** Every ref this page can resolve, baked at build. A plain object, not a function, so the same
+   *  value can also be handed to a hydrated island later without surprises. */
+  links: LinkTable;
+  /** Where an atom's own page lives, when this block is one. */
+  atomHrefs: Record<string, string>;
+}
+
+const { block, atomKinds, links, atomHrefs } = Astro.props;
+const rk = renderKindOf(block);
+// Through resolveRefIn, not `links[ref]`: the table is keyed without anchors, so a plain lookup
+// misses every `…/info#el-mecanismo` and renders it as a dead label.
+const resolveRef = (ref: string) => resolveRefIn(links, ref);
+---
+
+{
+  rk.kind === "columns" && (
+    <div class="flex flex-col gap-3 sm:flex-row">
+      {rk.columns.map((blocks, i) => (
+        <div class="min-w-0" style={`flex-grow:${rk.widths[i]};flex-basis:0`}>
+          {blocks.map((child) => (
+            <Self block={child} atomKinds={atomKinds} links={links} atomHrefs={atomHrefs} />
+          ))}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+{
+  rk.kind === "atom" && (
+    <AtomShell
+      atomId={rk.atomId}
+      kindLabel={atomKinds[rk.atomKind] ?? rk.atomKind}
+      label={rk.label}
+      href={atomHrefs[rk.atomId]}
+    >
+      {rk.blocks.map((child) => (
+        <Self block={child} atomKinds={atomKinds} links={links} atomHrefs={atomHrefs} />
+      ))}
+    </AtomShell>
+  )
+}
+
+{rk.kind === "heading" && <Heading level={rk.level} anchor={rk.anchor}>{rk.text || " "}</Heading>}
+
+{rk.kind === "markdown" && <Prose content={rk.content} resolveRef={resolveRef} />}
+
+{
+  (rk.kind === "embed" || rk.kind === "atomref") && (
+    <RefCard refKind={rk.kind} refPath={rk.ref} label={rk.label} resolve={resolveRef} />
+  )
+}
+
+{rk.kind === "lean" && <LeanBlock code={rk.code} theorem={rk.theorem} />}
+
+{/* KaTeX prerenders on the server; the play buttons arrive when the block scrolls into view. */}
+{rk.kind === "math" && <MathRunner client:visible lines={rk.lines} />}
+
+{
+  rk.kind === "code" &&
+    (rk.runnable ? (
+      <CodeRunner client:visible code={rk.code} lang={rk.runnable} displayLang={rk.lang} runnable readOnly />
+    ) : (
+      <CodeRunner code={rk.code} displayLang={rk.lang || "texto"} runnable={false} readOnly />
+    ))
+}
+
+{rk.kind === "mafs" && <GraphBlock client:visible expr={rk.expr} />}
+
+{
+  rk.kind === "artifact" &&
+    (rk.error ? (
+      <ArtifactError name={rk.name} error={rk.error} />
+    ) : rk.name === "diagram" ? (
+      <NodeDiagram client:visible {...(rk.props as object | null)} />
+    ) : (
+      <ArtifactError name={rk.name} error="todavía no implementado" />
+    ))
+}

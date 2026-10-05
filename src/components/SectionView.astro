@@ -1,0 +1,29 @@
+---
+import Base from "@/layouts/Base.astro";
+import Hero from "@/components/Hero.astro";
+import { t, DEFAULT_LOCALE, type Locale, type SectionKey } from "@/i18n";
+
+interface Props {
+  section: Exclude<SectionKey, "home">;
+}
+const { section } = Astro.props;
+const locale = (Astro.currentLocale ?? DEFAULT_LOCALE) as Locale;
+const s = t(locale);
+const data = s.sections[section];
+const showComingSoon = section === "community";
+---
+
+<Base section={section} title={`${s.nav[section]} · ${s.brand}`} description={data.blurb}>
+  <Hero kicker={s.nav[section]} title={data.title} blurb={data.blurb} />
+
+  {showComingSoon && (
+    <div class="glass mt-10 max-w-md p-5">
+      <p class="font-mono text-xs uppercase tracking-[0.18em] text-accent">{s.ui.comingSoon}</p>
+      <p class="mt-2 text-ink-muted">
+        {locale === "es"
+          ? "Esta sección llegará en una próxima entrega del milestone."
+          : "This section arrives in a later milestone."}
+      </p>
+    </div>
+  )}
+</Base>

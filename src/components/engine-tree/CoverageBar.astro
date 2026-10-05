@@ -1,0 +1,42 @@
+---
+/*
+  Coverage of a branch: the bar, the percentage and the two numbers it came from.
+
+  The numbers are always shown next to the percentage on purpose — "3,34 %" alone hides
+  whether the denominator is 36 or 958, and those are very different claims.
+*/
+interface Props {
+  covered: number;
+  leaves: number;
+  percent: number;
+  label: string;
+  ofTotal: string;
+  capabilities: string;
+  /** Large variant for the index page. */
+  big?: boolean;
+}
+
+const { covered, leaves, percent, label, ofTotal, capabilities, big = false } = Astro.props;
+/* A bar 0.4% wide is invisible; a floor of 1.5% keeps "some progress" readable without
+   claiming more than it should — the number next to it is the truth. */
+const width = percent === 0 ? 0 : Math.max(percent, 1.5);
+---
+
+<div class="w-full">
+  <div class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+    <span class="font-mono text-[11px] uppercase tracking-[0.14em] text-ink-muted">{label}</span>
+    <span class={big ? "text-2xl font-semibold text-ink" : "text-sm font-semibold text-ink"}>
+      {percent.toLocaleString("es", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} %
+      <span class="font-mono text-[11px] font-normal text-ink-muted">
+        · {covered} {ofTotal} {leaves} {capabilities}
+      </span>
+    </span>
+  </div>
+  <div
+    class={`mt-2 w-full overflow-hidden rounded-full bg-border ${big ? "h-2.5" : "h-1.5"}`}
+    role="img"
+    aria-label={`${covered} ${ofTotal} ${leaves} ${capabilities}`}
+  >
+    <div class="h-full rounded-full bg-primary" style={`width: ${width}%`}></div>
+  </div>
+</div>

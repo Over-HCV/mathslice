@@ -1,0 +1,115 @@
+---
+/*
+  TopicView — one topic page, at one level, in one locale.
+
+  Both /descubre/[...slug].astro and /en/descubre/[...slug].astro are five-line shims onto this
+  file, the pattern anotaciones.astro → NotesView.astro already set. The reason matters here more
+  than there: the site's navigation generates /en/descubre/… links, so an English page that does
+  not exist is a dead link the site produced itself.
+
+  The page is a NOTE. Its body is the same block tree the editor opens, rendered by
+  BlockRenderer.astro, which walks the same dispatch table the editor walks.
+*/
+import Base from "@/layouts/Base.astro";
+import BlockRenderer from "./BlockRenderer.astro";
+import PeekHost from "./PeekHost";
+import { t, type Locale } from "@/i18n";
+import { topicContent } from "@/lib/topicPages";
+import { levelNav } from "@/lib/topicRoutes";
+import type { TopicRoute } from "@/lib/topicRoutes";
+
+interface Props {
+  route: TopicRoute;
+}
+
+const { route } = Astro.props;
+const s = t(route.locale as Locale);
+const page = await topicContent(route);
+const levels = levelNav(route.topic, route.locale, route.level);
+---
+
+<Base
+  section="explore"
+  title={`${page.title} · ${s.brand}`}
+  description={page.summary}
+  altLocaleHref={page.altHref}
+>
+  <article class="mx-auto max-w-2xl">
+    <nav aria-label={s.nav.explore} class="flex flex-wrap items-center gap-2">
+      {
+        levels.map(({ level, href, current }) => (
+          <a
+            href={href}
+            aria-current={current ? "page" : undefined}
+            class:list={[
+              "rounded-[var(--radius-sm)] px-2.5 py-1 font-mono text-[11px] uppercase tracking-[0.18em] no-underline transition-colors",
+              current ? "bg-primary/12 text-ink" : "text-ink-muted hover:text-ink",
+            ]}
+          >
+            {s.topic.levels[level]}
+          </a>
+        ))
+      }
+    </nav>
+
+    {
+      !route.translated && (
+        <p class="mt-4 rounded-[var(--radius-md)] border border-border bg-surface px-4 py-2 text-sm text-ink-muted">
+          {s.topic.untranslated}
+        </p>
+      )
+    }
+
+    <h1 class="mt-3 text-balance text-4xl font-semibold leading-[1.08] text-ink sm:text-5xl">
+      {page.title}
+    </h1>
+
+    {page.summary && <p class="mt-4 text-lg text-ink-muted">{page.summary}</p>}
+    {
+      route.kind === "level" && (
+        <p class="mt-1 text-sm text-ink-muted">{s.topic.levelBlurbs[route.level]}</p>
+      )
+    }
+
+    {
+      page.needs.length > 0 && (
+        <p class="mt-4 flex flex-wrap items-baseline gap-2 text-sm text-ink-muted">
+          <span class="font-mono text-[11px] uppercase tracking-[0.18em]">{s.topic.needs}</span>
+          {page.needs.map((need) => (
+            <a href={need.href} class="text-primary underline decoration-dotted">
+              {need.title}
+            </a>
+          ))}
+        </p>
+      )
+    }
+
+    <hr class="my-8 border-border" />
+
+    <div>
+      {
+        page.blocks.map((block) => (
+          <BlockRenderer
+            block={block}
+            atomKinds={s.topic.atomKinds}
+            links={page.links}
+            atomHrefs={page.atomHrefs}
+          />
+        ))
+      }
+    </div>
+  </article>
+
+  {/*
+    The page's only island. `client:idle` because nothing here is needed to read the page — until
+    it hydrates, every `data-peek-ref` is a plain link that navigates, which is the whole point of
+    rendering the triggers as real anchors. Mounted once, outside the article, because it owns the
+    stack for every trigger on the page including the ones inside a panel it opened.
+  */}
+  <PeekHost
+    client:idle
+    locale={route.locale}
+    atomKinds={s.topic.atomKinds}
+    strings={s.topic.peek}
+  />
+</Base>

@@ -1,0 +1,14 @@
+---
+/*
+  GridPaper — faint graph-paper motif behind all content (it's math). Theme-aware via the
+  --grid-line / --grid-size tokens; a soft radial mask fades it toward the edges so it reads
+  as texture, not a table. Sits above the physics canvas (-z-20) and below content.
+*/
+---
+
+<div
+  aria-hidden="true"
+  class="grid-paper pointer-events-none fixed inset-0 -z-10"
+  style="mask-image: radial-gradient(ellipse 120% 90% at 50% 0%, black 40%, transparent 100%); -webkit-mask-image: radial-gradient(ellipse 120% 90% at 50% 0%, black 40%, transparent 100%);"
+>
+</div>

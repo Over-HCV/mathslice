@@ -1,0 +1,99 @@
+---
+import "../styles/global.css";
+import ThemeBoot from "@/components/ThemeBoot.astro";
+import GridPaper from "@/components/backgrounds/GridPaper.astro";
+import PhysicsBackground from "@/components/backgrounds/PhysicsBackground.tsx";
+import Nav from "@/components/Nav.tsx";
+import GlassRandomizer from "@/components/GlassRandomizer.astro";
+import {
+  t,
+  sectionPath,
+  DEFAULT_LOCALE,
+  LOCALES,
+  type Locale,
+  type SectionKey,
+} from "@/i18n";
+import type { BackgroundMotif } from "@/lib/identity";
+
+interface Props {
+  title: string;
+  description?: string;
+  section: SectionKey;
+  /** Override the section's default motif (e.g. for the lab). */
+  motif?: BackgroundMotif;
+  /** Override the alternate-locale link (e.g. deep content pages). */
+  altLocaleHref?: string;
+}
+
+const { title, description, section, motif, altLocaleHref } = Astro.props;
+
+const locale = (Astro.currentLocale ?? DEFAULT_LOCALE) as Locale;
+const strings = t(locale);
+const other = (LOCALES.find((l) => l !== locale) ?? DEFAULT_LOCALE) as Locale;
+
+const SECTION_MOTIF: Record<SectionKey, BackgroundMotif> = {
+  home: "constellation",
+  explore: "lattice", // sits behind the column tree; IS the grid
+  community: "field", // replaced the heavy fluid motif
+  notes: "constellation", // unused (no physics on notes)
+  faq: "constellation", // unused (no physics on faq)
+  engine: "lattice", // the capability tree, like explore's
+};
+const activeMotif = motif ?? SECTION_MOTIF[section];
+
+// Anotaciones (editor focus) + FAQ get no physics (identity: nothing there) — grid only.
+// Explore's lattice IS the grid → no static grid-paper there (avoids the double-grid).
+const showPhysics = section !== "notes" && section !== "faq";
+const showGrid = section !== "explore";
+
+const order: SectionKey[] = ["home", "explore", "community", "notes", "faq", "engine"];
+const navSections = order.map((key) => ({
+  key,
+  label: strings.nav[key],
+  href: sectionPath(key, locale),
+  active: key === section,
+}));
+
+const fullTitle = section === "home" ? `${strings.brand} — ${strings.tagline}` : `${strings.nav[section]} · ${strings.brand}`;
+---
+
+<!doctype html>
+<html lang={locale}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{title || fullTitle}</title>
+    {description && <meta name="description" content={description} />}
+    <meta name="generator" content={Astro.generator} />
+    <ThemeBoot />
+  </head>
+  <body class="min-h-dvh antialiased">
+    <a
+      href="#main"
+      class="glass sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-3 focus:z-50 focus:px-4 focus:py-2 focus:text-sm"
+    >
+      {strings.ui.skipToContent}
+    </a>
+
+    <div class="aura" aria-hidden="true"></div>
+    {showPhysics && <PhysicsBackground variant={activeMotif} client:idle />}
+    {showGrid && <GridPaper />}
+
+    <Nav
+      client:load
+      brand={strings.brand}
+      sections={navSections}
+      altLocaleHref={altLocaleHref ?? sectionPath(section, other)}
+      altLocaleCode={other.toUpperCase()}
+      themeLabel={strings.ui.theme}
+      languageLabel={strings.ui.language}
+    />
+
+    <main id="main" class="mx-auto w-full max-w-5xl px-5 pb-28 pt-8 sm:px-6 md:pb-16 md:pl-24">
+      <slot />
+    </main>
+
+    <GlassRandomizer />
+  </body>
+</html>

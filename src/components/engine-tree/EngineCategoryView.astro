@@ -1,0 +1,78 @@
+---
+/*
+  /motor/<category> — one category of the inventory: its tree, its checks, and the corpus
+  cases that back each capability, runnable against the real engine.
+
+  The tree is an island because it solves in a Worker. `client:load` and not `client:visible`:
+  the tree IS the page, and a capability tree that only wakes up once it scrolls into view is a
+  page whose first click does nothing. Everything above it is static, so the page still reads
+  with JavaScript off.
+*/
+import Base from "@/layouts/Base.astro";
+import CoverageBar from "@/components/engine-tree/CoverageBar.astro";
+import CapabilityTree from "@/components/engine-tree/CapabilityTree.tsx";
+import { readCategory } from "@/lib/engineTree.server";
+import { t, sectionPath, DEFAULT_LOCALE, LOCALES, type Locale } from "@/i18n";
+
+interface Props {
+  slug: string;
+}
+
+const { slug } = Astro.props;
+const locale = (Astro.currentLocale ?? DEFAULT_LOCALE) as Locale;
+const strings = t(locale);
+const words = strings.engine;
+
+const category = readCategory(slug);
+const base = sectionPath("engine", locale);
+
+/* The language toggle has to land on the same category, not on the index. */
+const other = (LOCALES.find((one) => one !== locale) ?? DEFAULT_LOCALE) as Locale;
+const altLocaleHref = `${sectionPath("engine", other)}/${slug}`;
+
+const treeStrings = {
+  case: words.case,
+  cases: words.cases,
+  noCases: words.noCases,
+  run: words.run,
+  running: words.running,
+  matches: words.matches,
+  mismatch: words.mismatch,
+  expected: words.expected,
+  got: words.got,
+};
+---
+
+<Base
+  section="engine"
+  title={`${category.title} · ${strings.sections.engine.title} · ${strings.brand}`}
+  description={strings.sections.engine.blurb}
+  altLocaleHref={altLocaleHref}
+>
+  <header class="mx-auto max-w-3xl">
+    <a href={base} class="font-mono text-xs text-ink-muted transition-colors hover:text-primary">
+      {words.backToIndex}
+    </a>
+    <h1 class="mt-2 text-balance text-4xl font-semibold leading-[1.08] text-ink sm:text-5xl">
+      {category.title}
+    </h1>
+
+    <div class="mt-6 rounded-[var(--radius-md)] border border-border bg-surface px-6 py-5">
+      <CoverageBar
+        covered={category.covered}
+        leaves={category.leaves}
+        percent={category.percent}
+        label={words.coverage}
+        ofTotal={words.ofTotal}
+        capabilities={words.capabilities}
+        big
+      />
+    </div>
+
+    {category.reindexed && <p class="mt-4 text-sm text-ink-muted">{words.reindexedNote}</p>}
+  </header>
+
+  <div class="mx-auto mt-8 max-w-3xl">
+    <CapabilityTree client:load nodes={category.nodes} strings={treeStrings} />
+  </div>
+</Base>

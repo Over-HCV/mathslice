@@ -1,0 +1,75 @@
+/*
+  Runtime design tokens — the single mutable surface the /visual-identity lab writes to.
+  Everything here is a plain CSS custom property so `applyIdentity()` (src/lib/identity.ts)
+  can override any of them live on :root, and every Tailwind utility follows (see global.css
+  @theme inline). Do NOT hardcode these colors/fonts in components — always go through tokens.
+
+  Colors are oklch: perceptually uniform lightness makes the light/dark parity and the lab's
+  contrast math predictable.
+*/
+
+:root {
+  /* — Typography (preset: "Calidez con rigor" — warm serif display + humanist sans) — */
+  --f-display: "Fraunces Variable", Georgia, serif;
+  --f-body: "Instrument Sans Variable", system-ui, sans-serif;
+  --f-mono: "JetBrains Mono Variable", ui-monospace, monospace;
+  --wm-tracking: 0.14em; /* wordmark letter-spacing */
+  --wm-weight: 600;
+
+  /* — Color (light) — */
+  --c-bg: oklch(0.985 0.006 95);        /* warm paper */
+  --c-surface: oklch(1 0 0);            /* cards / reading surfaces */
+  --c-ink: oklch(0.24 0.02 265);        /* body text */
+  --c-ink-muted: oklch(0.52 0.02 265);  /* secondary text */
+  --c-primary: oklch(0.52 0.16 265);    /* identity indigo */
+  --c-primary-ink: oklch(0.99 0 0);     /* text on primary */
+  --c-accent: oklch(0.70 0.14 65);      /* warm gold — max ~10% of surface */
+  --c-border: oklch(0.90 0.012 265);
+  --c-ring: var(--c-primary);
+
+  /* — Surface / glass — luminous frost in BOTH themes (never a dark panel).
+     The glow blobs behind (PhysicsBackground) are what the frost refracts. --glass-base is
+     a light frost tint; --glass-opacity is its alpha; --glass-highlight is the bright edge. — */
+  --radius: 0.9rem;
+  --glass-blur: 20px;
+  --glass-base: oklch(1 0 0); /* white frost, both themes */
+  --glass-opacity: 0.3; /* keep LOW so the moving background shows through (transparent, not milky) */
+  --glass-highlight: oklch(1 0 0 / 0.75); /* bright edge of the gradient border */
+  --glass-grain: 0.06; /* frosted-glass noise film opacity */
+
+  /* — Background motion (0 off · 0.5 calm · 1 full). Lab-controlled; never a dead frame. — */
+  --motion-level: 1;
+
+  /* — Grid-paper motif — */
+  --grid-line: oklch(0.55 0.02 265 / 0.06);
+  --grid-size: 26px;
+
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --c-bg: oklch(0.18 0.02 265);
+  --c-surface: oklch(0.225 0.025 265);
+  --c-ink: oklch(0.95 0.01 265);
+  --c-ink-muted: oklch(0.70 0.02 265);
+  --c-primary: oklch(0.70 0.15 265);
+  --c-primary-ink: oklch(0.17 0.02 265);
+  --c-accent: oklch(0.79 0.13 72);
+  --c-border: oklch(0.32 0.02 265);
+  --c-ring: var(--c-primary);
+
+  /* Dark: very low frost alpha so the moving background glows through (luminous, not a panel). */
+  --glass-opacity: 0.09;
+  --glass-highlight: oklch(1 0 0 / 0.5);
+  --grid-line: oklch(0.85 0.02 265 / 0.07);
+
+  color-scheme: dark;
+}
+
+/* Default motion policy when the lab hasn't forced a level ("auto"): calm under OS reduce-motion,
+   full otherwise. An explicit lab choice writes --motion-level inline on :root and wins over this. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-level: 0.5;
+  }
+}
