@@ -37,3 +37,4 @@ trash/*
 
 # Vercel CLI (proyecto enlazado localmente)
 .vercel
+.env*
