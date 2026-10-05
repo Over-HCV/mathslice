@@ -9,8 +9,13 @@ if ! command -v rustup >/dev/null 2>&1; then
   # and rustup installs exactly that the first time cargo runs inside engine/.
   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain none
 fi
-# shellcheck source=/dev/null
-source "$HOME/.cargo/env"
+# Only a rustup installed by this script lives in ~/.cargo; one preinstalled in the image is
+# already on PATH and has no env file.
+if [ -f "$HOME/.cargo/env" ]; then
+  # shellcheck source=/dev/null
+  source "$HOME/.cargo/env"
+fi
+echo "rustup: $(command -v rustup) — $(cd engine && rustc --version)"
 
 if [ ! -f engine/Cargo.toml ]; then
   echo "engine/ is empty: the submodule was not checked out (git submodule update --init)." >&2
